@@ -3,19 +3,24 @@
   "item.willpower.will_ring": "Кольцо воли",
   "block.willpower.will_reservoir": "Хранилище воли",
   "block.willpower.will_construct": "Конструкт воли",
-
   "mode.willpower.bridge": "Мост",
   "mode.willpower.wall": "Стена",
   "mode.willpower.platform": "Платформа",
   "mode.willpower.shield": "Щит",
   "mode.willpower.dash": "Рывок",
-
   "message.willpower.mode": "Режим: %s",
   "message.willpower.no_charge": "Кольцо разряжено!",
   "message.willpower.recharged": "Кольцо полностью заряжено",
   "message.willpower.already_full": "Кольцо уже заряжено",
-
   "tooltip.willpower.mode": "Режим: %s",
   "tooltip.willpower.charge": "Заряд: %s%%",
-  "tooltip.willpower.hint": "ПКМ: создать. Shift + ПКМ: сменить режим."
+  "tooltip.willpower.hint": "ПКМ: создать. Shift + ПКМ: сменить режим.",
+  "item.willpower.lantern_helmet": "Шлем Фонаря",
+  "item.willpower.lantern_chestplate": "Нагрудник Фонаря",
+  "item.willpower.lantern_leggings": "Поножи Фонаря",
+  "item.willpower.lantern_boots": "Ботинки Фонаря",
+  "mode.willpower.flight": "Полёт",
+  "message.willpower.flight_on": "Полёт включён",
+  "message.willpower.flight_off": "Полёт выключен",
+  "message.willpower.flight_empty": "Кольцо разряжено, полёт выключен!"
 }

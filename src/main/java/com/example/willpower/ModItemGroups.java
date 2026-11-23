@@ -15,6 +15,10 @@ public final class ModItemGroups {
                     .entries((context, entries) -> {
                         entries.add(ModItems.WILL_RING);
                         entries.add(ModBlocks.WILL_RESERVOIR);
+                        entries.add(ModItems.LANTERN_HELMET);
+                        entries.add(ModItems.LANTERN_CHESTPLATE);
+                        entries.add(ModItems.LANTERN_LEGGINGS);
+                        entries.add(ModItems.LANTERN_BOOTS);
                     })
                     .build());
 

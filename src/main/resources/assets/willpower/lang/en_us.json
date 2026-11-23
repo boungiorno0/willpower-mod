@@ -3,19 +3,24 @@
   "item.willpower.will_ring": "Ring of Will",
   "block.willpower.will_reservoir": "Will Reservoir",
   "block.willpower.will_construct": "Will Construct",
-
   "mode.willpower.bridge": "Bridge",
   "mode.willpower.wall": "Wall",
   "mode.willpower.platform": "Platform",
   "mode.willpower.shield": "Shield",
   "mode.willpower.dash": "Dash",
-
   "message.willpower.mode": "Mode: %s",
   "message.willpower.no_charge": "The ring is out of charge!",
   "message.willpower.recharged": "Ring fully recharged",
   "message.willpower.already_full": "The ring is already full",
-
   "tooltip.willpower.mode": "Mode: %s",
   "tooltip.willpower.charge": "Charge: %s%%",
-  "tooltip.willpower.hint": "Right-click: create. Shift + right-click: change mode."
+  "tooltip.willpower.hint": "Right-click: create. Shift + right-click: change mode.",
+  "item.willpower.lantern_helmet": "Lantern Helmet",
+  "item.willpower.lantern_chestplate": "Lantern Chestplate",
+  "item.willpower.lantern_leggings": "Lantern Leggings",
+  "item.willpower.lantern_boots": "Lantern Boots",
+  "mode.willpower.flight": "Flight",
+  "message.willpower.flight_on": "Flight enabled",
+  "message.willpower.flight_off": "Flight disabled",
+  "message.willpower.flight_empty": "The ring ran out of charge, flight disabled!"
 }

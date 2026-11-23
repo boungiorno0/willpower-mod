@@ -1,5 +1,7 @@
 package com.example.willpower.item;
 
+import com.example.willpower.FlightHandler;
+import com.example.willpower.ModArmorMaterials;
 import com.example.willpower.ModBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.component.DataComponentTypes;
@@ -11,6 +13,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -64,6 +67,14 @@ public class WillRingItem extends Item {
 
         RingMode mode = getMode(stack);
 
+        // Полёт: переключатель, заряд тратится не сразу, а пока игрок летит
+        if (mode == RingMode.FLIGHT) {
+            if (!world.isClient) {
+                FlightHandler.toggle((ServerPlayerEntity) player, stack);
+            }
+            return TypedActionResult.success(stack, world.isClient);
+        }
+
         // Не хватает заряда (кольцо никогда не ломается)
         if (stack.getDamage() + mode.cost >= stack.getMaxDamage()) {
             if (!world.isClient) {
@@ -80,6 +91,7 @@ public class WillRingItem extends Item {
                 case PLATFORM -> buildPlatform(serverWorld, player);
                 case SHIELD -> buildShield(serverWorld, player);
                 case DASH -> dash(player);
+                case FLIGHT -> { }
             }
             stack.setDamage(stack.getDamage() + mode.cost);
             world.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -165,10 +177,11 @@ public class WillRingItem extends Item {
 
     // ---------- прочее ----------
 
-    /** Медленная саморегенерация: 1 единица заряда в 2 секунды, пока кольцо в инвентаре. */
+    /** Медленная саморегенерация: 1 единица заряда в 2 секунды (в полном костюме вдвое быстрее). */
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (!world.isClient && world.getTime() % 40 == 0 && stack.getDamage() > 0) {
+        int interval = (entity instanceof PlayerEntity p && ModArmorMaterials.hasFullSet(p)) ? 20 : 40;
+        if (!world.isClient && world.getTime() % interval == 0 && stack.getDamage() > 0) {
             stack.setDamage(stack.getDamage() - 1);
         }
     }

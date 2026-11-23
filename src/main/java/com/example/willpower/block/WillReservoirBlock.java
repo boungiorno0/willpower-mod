@@ -40,6 +40,6 @@ public class WillReservoirBlock extends Block {
             }
             return ItemActionResult.success(world.isClient);
         }
-        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
     }
 }

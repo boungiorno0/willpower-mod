@@ -15,5 +15,6 @@ public class WillpowerMod implements ModInitializer {
         ModBlocks.init();
         ModItems.init();
         ModItemGroups.init();
+        FlightHandler.init();
     }
 }
