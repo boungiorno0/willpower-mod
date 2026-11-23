@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "GEG",
+    "ECE",
+    "GEG"
+  ],
+  "key": {
+    "G": { "item": "minecraft:glass" },
+    "E": { "item": "minecraft:emerald" },
+    "C": { "item": "minecraft:glowstone" }
+  },
+  "result": { "id": "willpower:will_reservoir" }
+}

@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "willpower:block/will_reservoir" }
+  }
+}

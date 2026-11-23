@@ -1,0 +1,21 @@
+{
+  "itemGroup.willpower.main": "Willpower Constructs",
+  "item.willpower.will_ring": "Ring of Will",
+  "block.willpower.will_reservoir": "Will Reservoir",
+  "block.willpower.will_construct": "Will Construct",
+
+  "mode.willpower.bridge": "Bridge",
+  "mode.willpower.wall": "Wall",
+  "mode.willpower.platform": "Platform",
+  "mode.willpower.shield": "Shield",
+  "mode.willpower.dash": "Dash",
+
+  "message.willpower.mode": "Mode: %s",
+  "message.willpower.no_charge": "The ring is out of charge!",
+  "message.willpower.recharged": "Ring fully recharged",
+  "message.willpower.already_full": "The ring is already full",
+
+  "tooltip.willpower.mode": "Mode: %s",
+  "tooltip.willpower.charge": "Charge: %s%%",
+  "tooltip.willpower.hint": "Right-click: create. Shift + right-click: change mode."
+}
