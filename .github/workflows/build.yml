@@ -15,12 +15,16 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.10
+      - name: Install Gradle 8.10
+        run: |
+          curl -sL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle.zip
+          unzip -q gradle.zip -d /opt
+          echo "/opt/gradle-8.10/bin" >> $GITHUB_PATH
 
       - name: Build
-        run: gradle build --no-daemon
+        run: |
+          gradle --version
+          gradle build --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:
