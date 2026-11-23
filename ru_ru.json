@@ -1,0 +1,21 @@
+{
+  "itemGroup.willpower.main": "Конструкты воли",
+  "item.willpower.will_ring": "Кольцо воли",
+  "block.willpower.will_reservoir": "Хранилище воли",
+  "block.willpower.will_construct": "Конструкт воли",
+
+  "mode.willpower.bridge": "Мост",
+  "mode.willpower.wall": "Стена",
+  "mode.willpower.platform": "Платформа",
+  "mode.willpower.shield": "Щит",
+  "mode.willpower.dash": "Рывок",
+
+  "message.willpower.mode": "Режим: %s",
+  "message.willpower.no_charge": "Кольцо разряжено!",
+  "message.willpower.recharged": "Кольцо полностью заряжено",
+  "message.willpower.already_full": "Кольцо уже заряжено",
+
+  "tooltip.willpower.mode": "Режим: %s",
+  "tooltip.willpower.charge": "Заряд: %s%%",
+  "tooltip.willpower.hint": "ПКМ: создать. Shift + ПКМ: сменить режим."
+}
