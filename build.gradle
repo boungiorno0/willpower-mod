@@ -11,6 +11,11 @@ base {
 }
 
 repositories {
+    maven { url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/" }
+    maven { url = "https://maven.ladysnake.org/releases" }
+    maven { url = "https://maven.terraformersmc.com/" }
+    maven { url = "https://maven.shedaniel.me/" }
+    maven { url = "https://maven.maxhenkel.de/repository/public" }
 }
 
 dependencies {
@@ -18,6 +23,23 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // 3D-модели и анимации (Центральные Батареи, Фонари, Кулак, Лодка и т.д.)
+    modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+
+    // Хранение и синхронизация данных игрока (Корпус, Ранг, Заряд, Кастомизация)
+    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-base:${project.cca_version}"
+    modImplementation "org.ladysnake.cardinal-components-api:cardinal-components-entity:${project.cca_version}"
+
+    // Отдельный слот под кольцо (Ring Slot)
+    modImplementation "dev.emi:trinkets:${project.trinkets_version}"
+
+    // Настройки мода в игре
+    modImplementation "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // Опционально: голосовая клятва, рация Comms и Мегафон через Simple Voice Chat
+    compileOnly "de.maxhenkel.voicechat:voicechat-api:${project.voicechat_api_version}"
 }
 
 processResources {
