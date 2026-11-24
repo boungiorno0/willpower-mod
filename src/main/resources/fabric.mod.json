@@ -3,18 +3,26 @@
   "id": "willpower",
   "version": "${version}",
   "name": "Willpower Constructs",
-  "description": "Кольцо воли создаёт светящиеся зелёные конструкты: мосты, стены, платформы и щиты. Подзаряжай кольцо в Хранилище воли.",
+  "description": "Фонари Эмоционального Спектра: все 7 корпусов, светящиеся 3D-конструкты, полёт, клятвы и Центральные Батареи.",
   "authors": ["You"],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
     "main": ["com.example.willpower.WillpowerMod"],
-    "client": ["com.example.willpower.client.WillpowerClient"]
+    "client": ["com.example.willpower.client.WillpowerClient"],
+    "cardinal-components": ["com.example.willpower.component.ModComponents"]
+  },
+  "custom": {
+    "cardinal-components": [
+      "willpower:lantern"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.1",
     "java": ">=21",
-    "fabric-api": "*"
+    "fabric-api": "*",
+    "cardinal-components-base": ">=6.1.0",
+    "cardinal-components-entity": ">=6.1.0"
   }
 }
