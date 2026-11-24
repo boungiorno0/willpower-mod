@@ -1,5 +1,6 @@
 package com.example.willpower;
 
+import com.example.willpower.entity.ModEntities;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 
@@ -15,6 +16,6 @@ public class WillpowerMod implements ModInitializer {
         ModBlocks.init();
         ModItems.init();
         ModItemGroups.init();
-        FlightHandler.init();
+        ModEntities.init();
     }
 }
