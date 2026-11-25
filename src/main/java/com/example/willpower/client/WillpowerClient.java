@@ -2,6 +2,7 @@ package com.example.willpower.client;
 
 import com.example.willpower.ModBlocks;
 import com.example.willpower.client.render.ConstructEntityRenderer;
+import com.example.willpower.client.render.LanternHudRenderer;
 import com.example.willpower.client.render.LanternVisualFeatureRenderer;
 import com.example.willpower.client.render.VoxelTrailRenderer;
 import com.example.willpower.entity.ModEntities;
@@ -9,6 +10,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.render.RenderLayer;
@@ -26,6 +28,7 @@ public class WillpowerClient implements ClientModInitializer {
             }
         });
 
+        HudRenderCallback.EVENT.register(new LanternHudRenderer());
         ClientTickEvents.END_CLIENT_TICK.register(VoxelTrailRenderer::tick);
         WorldRenderEvents.AFTER_ENTITIES.register(VoxelTrailRenderer::render);
     }
