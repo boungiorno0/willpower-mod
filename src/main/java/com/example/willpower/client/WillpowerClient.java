@@ -21,9 +21,10 @@ public class WillpowerClient implements ClientModInitializer {
     public void onInitializeClient() {
         BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.WILL_CONSTRUCT, RenderLayer.getTranslucent());
         EntityRendererRegistry.register(ModEntities.CONSTRUCT, ConstructEntityRenderer::new);
+        LanternModelPlugin.register();
 
         for (LanternCorps corps : LanternCorps.values()) {
-            int tint = 0xFF000000 | corps.getBaseRgb();
+            int tint = corps == LanternCorps.BLACK ? 0xFF5A5A70 : (0xFF000000 | corps.getBaseRgb());
             ColorProviderRegistry.ITEM.register((stack, tintIndex) -> tintIndex == 0 ? tint : -1,
                     ModCorpsRegistry.RINGS.get(corps),
                     ModCorpsRegistry.LANTERNS.get(corps));
