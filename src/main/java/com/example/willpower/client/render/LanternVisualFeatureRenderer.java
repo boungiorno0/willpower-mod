@@ -31,9 +31,7 @@ public class LanternVisualFeatureRenderer extends FeatureRenderer<AbstractClient
         int g = (argb >> 8) & 0xFF;
         int b = argb & 0xFF;
 
-        VertexConsumer glowVc = vertexConsumers.getBuffer(HardLightRenderLayers.getVoxelGlow());
-
-        // 1. Светящееся кольцо на руке (учитывает левшу/правшу)
+        // 1. Светящееся кольцо на руке
         matrices.push();
         if (player.getMainArm() == Arm.LEFT) {
             this.getContextModel().leftArm.rotate(matrices);
@@ -42,10 +40,11 @@ public class LanternVisualFeatureRenderer extends FeatureRenderer<AbstractClient
             this.getContextModel().rightArm.rotate(matrices);
             matrices.translate(-0.0625F, 0.54F, 0.0F);
         }
-        drawGlowBox(matrices.peek(), glowVc, 0.065F, 0.065F, 0.065F, r, g, b, data.isDesynced() && (player.age % 6 < 3) ? 45 : 195);
+        VertexConsumer ringVc = vertexConsumers.getBuffer(HardLightRenderLayers.getVoxelGlow());
+        drawGlowBox(matrices.peek(), ringVc, 0.065F, 0.065F, 0.065F, r, g, b, data.isDesynced() && (player.age % 6 < 3) ? 45 : 195);
         matrices.pop();
 
-        // 2. Парящая 3D-эмблема перед грудью (PNG или встроенный 3D-знак Фонаря)
+        // 2. Парящая 3D-эмблема перед грудью
         if (data.isSuitActive() && data.isInsigniaActive()) {
             matrices.push();
             this.getContextModel().body.rotate(matrices);
@@ -58,14 +57,15 @@ public class LanternVisualFeatureRenderer extends FeatureRenderer<AbstractClient
                 VertexConsumer emblemVc = vertexConsumers.getBuffer(HardLightRenderLayers.getHardLightGlow(emblemTex));
                 drawTexturedQuad(matrices, emblemVc, r, g, b, 235);
             } else {
-                drawProceduralEmblem(matrices, glowVc, r, g, b, 220);
+                VertexConsumer emblemVc = vertexConsumers.getBuffer(HardLightRenderLayers.getVoxelGlow());
+                drawProceduralEmblem(matrices, emblemVc, r, g, b, 220);
                 matrices.translate(0.0F, 0.0F, dist * 0.45F);
-                drawProceduralEmblem(matrices, glowVc, r, g, b, 105);
+                drawProceduralEmblem(matrices, emblemVc, r, g, b, 105);
             }
             matrices.pop();
         }
 
-        // 3. Светящиеся глаза (8x8 маска)
+        // 3. Светящиеся глаза
         long eyesMask = data.getGlowingEyesMask();
         if (eyesMask != 0L) {
             matrices.push();
@@ -84,13 +84,14 @@ public class LanternVisualFeatureRenderer extends FeatureRenderer<AbstractClient
             matrices.pop();
         }
 
-        // 4. Энергетическая аура вокруг тела
+        // 4. Энергетическая аура
         if (data.isAuraActive() && data.getCharge() > 0) {
             matrices.push();
             this.getContextModel().body.rotate(matrices);
             matrices.translate(0.0F, 0.375F, 0.0F);
             float pulse = 0.025F * (float) Math.sin((player.age + tickDelta) * 0.25F);
-            drawGlowBox(matrices.peek(), glowVc, 0.30F + pulse, 0.43F + pulse, 0.18F + pulse, r, g, b, 55);
+            VertexConsumer auraVc = vertexConsumers.getBuffer(HardLightRenderLayers.getVoxelGlow());
+            drawGlowBox(matrices.peek(), auraVc, 0.30F + pulse, 0.43F + pulse, 0.18F + pulse, r, g, b, 55);
             matrices.pop();
         }
     }
