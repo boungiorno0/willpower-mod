@@ -3,7 +3,7 @@
   "id": "willpower",
   "version": "${version}",
   "name": "Willpower Constructs",
-  "description": "Фонари Эмоционального Спектра: все 7 корпусов, светящиеся 3D-конструкты, полёт, клятвы и Центральные Батареи.",
+  "description": "Фонари Эмоционального Спектра: все 9 корпусов, светящиеся 3D-конструкты, полёт, клятвы и Центральные Батареи.",
   "authors": ["You"],
   "license": "MIT",
   "environment": "*",
@@ -12,6 +12,9 @@
     "client": ["com.example.willpower.client.WillpowerClient"],
     "cardinal-components": ["com.example.willpower.component.ModComponents"]
   },
+  "mixins": [
+    "willpower.mixins.json"
+  ],
   "custom": {
     "cardinal-components": [
       "willpower:lantern"
