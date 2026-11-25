@@ -16,6 +16,7 @@ public class WillpowerMod implements ModInitializer {
     public void onInitialize() {
         ModBlocks.init();
         ModItems.init();
+        ModCorpsRegistry.init();
         ModItemGroups.init();
         ModEntities.init();
         SpectrumSynergy.init();
