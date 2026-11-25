@@ -12,6 +12,7 @@ import net.minecraft.text.Text;
 
 public class LanternScreen extends Screen {
     private static final long DEFAULT_EYES = (1L << 33) | (1L << 34) | (1L << 37) | (1L << 38);
+    private static final String[] POSE_NAMES = {"Выкл", "Бой", "Герой", "Медитация"};
 
     private boolean suit, mask, aura, insignia, eyesCorps;
     private int style, maskY, pose;
@@ -39,13 +40,13 @@ public class LanternScreen extends Screen {
     @Override
     protected void init() {
         int cx = this.width / 2;
-        int y = 44;
+        int y = 40;
 
         addBtn(cx - 155, y, 150, "Костюм: " + onOff(suit), () -> suit = !suit);
-        addBtn(cx + 5, y, 150, "Стиль: " + (style == 0 ? "Comic" : "Armored"), () -> style = (style + 1) % 2);
+        addBtn(cx + 5, y, 150, "Стиль: " + (style == 0 ? "Comic" : "Exo-2026"), () -> style = (style + 1) % 2);
         y += 24;
 
-        addBtn(cx - 155, y, 100, "Маска: " + onOff(mask), () -> mask = !mask);
+        addBtn(cx - 155, y, 100, "Шлем/Маска: " + onOff(mask), () -> mask = !mask);
         addBtn(cx - 50, y, 25, "-", () -> maskY = Math.max(-4, maskY - 1));
         addBtn(cx - 22, y, 25, "+", () -> maskY = Math.min(4, maskY + 1));
         addBtn(cx + 5, y, 150, "Аура: " + onOff(aura), () -> aura = !aura);
@@ -68,10 +69,11 @@ public class LanternScreen extends Screen {
         addBtn(cx + 83, y, 72, "Насыщ +", () -> sat = Math.min(0.5f, sat + 0.1f));
         y += 24;
 
-        addBtn(cx - 155, y, 150, "Полёт: " + Math.round(speed) + " b/s", () -> {
-            speed = (speed >= 64f) ? 8f : speed + 8f;
-        });
-        addBtn(cx + 5, y, 150, "Готово", this::close);
+        addBtn(cx - 155, y, 150, "Полёт: " + Math.round(speed) + " b/s", () -> speed = (speed >= 64f) ? 8f : speed + 8f);
+        addBtn(cx + 5, y, 150, "Поза: " + POSE_NAMES[Math.clamp(pose, 0, 3)], () -> pose = (pose + 1) % 4);
+        y += 26;
+
+        addBtn(cx - 75, y, 150, "Готово", this::close);
     }
 
     private void addBtn(int x, int y, int w, String label, Runnable action) {
@@ -98,9 +100,9 @@ public class LanternScreen extends Screen {
         PlayerLanternComponent d = ModComponents.LANTERN.get(MinecraftClient.getInstance().player);
         int color = d.getActiveCorps() != null ? (0xFF000000 | d.getActiveCorps().getBaseRgb()) : 0xFFFFFFFF;
         String header = d.getActiveCorps() != null
-                ? d.getActiveCorps().getDisplayName() + " | Высота маски: " + maskY + " | Дист: " + String.format("%.2f", insDist)
+                ? d.getActiveCorps().getDisplayName() + " | V: Ульта | G: Тракторный луч"
                 : "Активируй любое кольцо Фонаря (ПКМ)!";
-        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(header), this.width / 2, 18, color);
+        ctx.drawCenteredTextWithShadow(this.textRenderer, Text.literal(header), this.width / 2, 16, color);
     }
 
     @Override
