@@ -53,40 +53,32 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
         if (data.isDesynced() && (player.age % 12 < 3)) return;
 
         int rgb = data.getDisplayArgb() & 0x00FFFFFF;
-        boolean tactical = data.getSuitStyle() == 1; // 1 = стиль «Фонари 2026»
+        boolean tactical = data.getSuitStyle() == 1;
         int darkBase = tactical ? 0xFF171A20 : 0xFF101318;
         int armorTone = tactical ? scaleRgb(rgb, 0.52f) : (0xFF000000 | rgb);
         int trimTone = tactical ? scaleRgb(rgb, 0.78f) : (0xFF000000 | rgb);
         int glowTone = 0x77000000 | rgb;
-
-        VertexConsumer solidVc = consumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEX));
-        VertexConsumer glowVc = consumers.getBuffer(HardLightRenderLayers.getHardLightGlow(WHITE_TEX));
         var model = getContextModel();
 
-        // Торс + пояс + тактический воротник
+        // 1. Сначала рисуем все обычные детали одним слоем solidVc
+        VertexConsumer solidVc = consumers.getBuffer(RenderLayer.getEntityTranslucent(WHITE_TEX));
         renderPart(matrices, model.body, torsoBase, solidVc, light, darkBase);
         renderPart(matrices, model.body, chestAccent, solidVc, light, armorTone);
         renderPart(matrices, model.body, belt, solidVc, light, tactical ? 0xFF111317 : armorTone);
-        renderPart(matrices, model.body, buckle, glowVc, LightmapTextureManager.MAX_LIGHT_COORDINATE, glowTone);
         if (tactical) {
             renderPart(matrices, model.body, collar, solidVc, light, darkBase);
             renderPart(matrices, model.rightArm, rightPauldron, solidVc, light, armorTone);
             renderPart(matrices, model.leftArm, leftPauldron, solidVc, light, armorTone);
         }
-
-        // Рукава и перчатки/наручи
         renderPart(matrices, model.rightArm, rightSleeve, solidVc, light, darkBase);
         renderPart(matrices, model.leftArm, leftSleeve, solidVc, light, darkBase);
         renderPart(matrices, model.rightArm, rightGlove, solidVc, light, tactical ? darkBase : trimTone);
         renderPart(matrices, model.leftArm, leftGlove, solidVc, light, tactical ? darkBase : trimTone);
-
-        // Ноги и ботинки
         renderPart(matrices, model.rightLeg, legBase, solidVc, light, darkBase);
         renderPart(matrices, model.leftLeg, legBase, solidVc, light, darkBase);
         renderPart(matrices, model.rightLeg, bootPart, solidVc, light, tactical ? 0xFF121419 : trimTone);
         renderPart(matrices, model.leftLeg, bootPart, solidVc, light, tactical ? 0xFF121419 : trimTone);
 
-        // Маска
         if (data.isMaskActive()) {
             matrices.push();
             model.head.rotate(matrices);
@@ -94,6 +86,10 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
             maskPart.render(matrices, solidVc, light, OverlayTexture.DEFAULT_UV, trimTone);
             matrices.pop();
         }
+
+        // 2. Только после solidVc берём glowVc для светящейся пряжки
+        VertexConsumer glowVc = consumers.getBuffer(HardLightRenderLayers.getHardLightGlow(WHITE_TEX));
+        renderPart(matrices, model.body, buckle, glowVc, LightmapTextureManager.MAX_LIGHT_COORDINATE, glowTone);
     }
 
     private static int scaleRgb(int rgb, float factor) {
