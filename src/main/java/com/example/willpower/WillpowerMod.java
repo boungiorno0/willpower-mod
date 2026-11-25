@@ -2,6 +2,7 @@ package com.example.willpower;
 
 import com.example.willpower.core.SpectrumSynergy;
 import com.example.willpower.entity.ModEntities;
+import com.example.willpower.network.LanternActionPayload;
 import com.example.willpower.network.LanternConfigPayload;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -22,5 +23,6 @@ public class WillpowerMod implements ModInitializer {
         ModEntities.init();
         SpectrumSynergy.init();
         LanternConfigPayload.registerServer();
+        LanternActionPayload.registerServer();
     }
 }
