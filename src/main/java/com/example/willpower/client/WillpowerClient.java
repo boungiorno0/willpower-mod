@@ -26,6 +26,7 @@ public class WillpowerClient implements ClientModInitializer {
             }
         });
 
+        LanternKeybinds.init();
         HudRenderCallback.EVENT.register(new LanternHudRenderer());
         ClientTickEvents.END_CLIENT_TICK.register(VoxelTrailRenderer::tick);
         WorldRenderEvents.AFTER_ENTITIES.register(VoxelTrailRenderer::render);
