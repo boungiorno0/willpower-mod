@@ -1,5 +1,6 @@
 package com.example.willpower;
 
+import com.example.willpower.core.SpectrumSynergy;
 import com.example.willpower.entity.ModEntities;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
@@ -17,5 +18,6 @@ public class WillpowerMod implements ModInitializer {
         ModItems.init();
         ModItemGroups.init();
         ModEntities.init();
+        SpectrumSynergy.init();
     }
 }
