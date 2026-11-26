@@ -6,11 +6,14 @@ import com.example.willpower.core.LanternCorps;
 import com.example.willpower.core.SpectrumSynergy;
 import com.example.willpower.entity.ConstructEntity;
 import com.example.willpower.entity.ModEntities;
+import dev.emi.trinkets.api.SlotReference;
+import dev.emi.trinkets.api.TrinketItem;
+import dev.emi.trinkets.api.TrinketsApi;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.sound.SoundCategory;
@@ -23,7 +26,7 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-public class CorpsRingItem extends Item {
+public class CorpsRingItem extends TrinketItem {
     private static final String MODE_KEY = "construct_kind";
     private static final long DEFAULT_EYES_MASK = (1L << 33) | (1L << 34) | (1L << 37) | (1L << 38);
 
@@ -51,13 +54,43 @@ public class CorpsRingItem extends Item {
     }
 
     @Override
+    public void onEquip(ItemStack stack, SlotReference slot, LivingEntity entity) {
+        if (!entity.getWorld().isClient && entity instanceof PlayerEntity player) {
+            activateNewRing(player, ModComponents.LANTERN.get(player));
+        }
+    }
+
+    @Override
+    public void onUnequip(ItemStack stack, SlotReference slot, LivingEntity entity) {
+        if (!entity.getWorld().isClient && entity instanceof PlayerEntity player) {
+            boolean stillHasRing = TrinketsApi.getTrinketComponent(player)
+                    .map(c -> c.isEquipped(s -> s.getItem() instanceof CorpsRingItem))
+                    .orElse(false);
+            if (!stillHasRing) {
+                PlayerLanternComponent data = ModComponents.LANTERN.get(player);
+                data.setSuitActive(false);
+                data.setAuraActive(false);
+                data.setInsigniaActive(false);
+                data.setGlowingEyesMask(0L);
+                updateFlight(player, false);
+            }
+        }
+    }
+
+    @Override
+    public void tick(ItemStack stack, SlotReference slot, LivingEntity entity) {
+        if (!entity.getWorld().isClient && entity instanceof PlayerEntity player) {
+            handleRingTick(player, entity.getWorld());
+        }
+    }
+
+    @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getStackInHand(hand);
         if (world.isClient) return TypedActionResult.success(stack, true);
 
         PlayerLanternComponent data = ModComponents.LANTERN.get(player);
 
-        // Левая рука — включить/выключить костюм, ауру, эмблему и полёт
         if (hand == Hand.OFF_HAND) {
             if (data.getActiveCorps() != corps) {
                 activateNewRing(player, data);
@@ -73,7 +106,6 @@ public class CorpsRingItem extends Item {
             return TypedActionResult.success(stack, false);
         }
 
-        // Shift + ПКМ — сменить тип 3D-конструкта
         if (player.isSneaking()) {
             nextKind(stack);
             player.sendMessage(Text.literal("Режим: " + getKind(stack).name()).styled(s -> s.withColor(corps.getBaseRgb())), true);
@@ -111,7 +143,7 @@ public class CorpsRingItem extends Item {
         data.setInsigniaActive(true);
         data.setGlowingEyesMask(DEFAULT_EYES_MASK);
         updateFlight(player, true);
-        player.sendMessage(corps.getFormattedName().copy().append(" — кольцо активировано!"), true);
+        player.sendMessage(corps.getFormattedName().copy().append(" — кольцо надето!"), true);
     }
 
     private static void updateFlight(PlayerEntity player, boolean canFly) {
@@ -123,7 +155,13 @@ public class CorpsRingItem extends Item {
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (world.isClient || !(entity instanceof PlayerEntity player) || world.getTime() % 20 != 0) return;
+        if (!world.isClient && entity instanceof PlayerEntity player) {
+            handleRingTick(player, world);
+        }
+    }
+
+    private void handleRingTick(PlayerEntity player, World world) {
+        if (world.getTime() % 20 != 0) return;
         PlayerLanternComponent data = ModComponents.LANTERN.get(player);
         if (data.getActiveCorps() == corps && data.isSuitActive()) {
             if (player.getAbilities().flying && !player.isCreative()) {
@@ -142,8 +180,7 @@ public class CorpsRingItem extends Item {
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(corps.getFormattedName());
-        tooltip.add(Text.literal("Эмоция: " + corps.getEmotionName()).formatted(Formatting.GRAY));
-        tooltip.add(Text.literal("Режим: " + getKind(stack).name()).formatted(Formatting.AQUA));
-        tooltip.add(Text.literal("Shift+ПКМ: режим | Левая рука: костюм и полёт").formatted(Formatting.DARK_GRAY));
+        tooltip.add(Text.literal("Надень в слот кольца (Trinkets) или используй в руке").formatted(Formatting.GOLD));
+        tooltip.add(Text.literal("Режим: " + getKind(stack).name() + " (Shift+ПКМ)").formatted(Formatting.AQUA));
     }
 }
