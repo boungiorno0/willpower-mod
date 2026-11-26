@@ -13,15 +13,15 @@ import net.minecraft.util.math.Vec3d;
 import java.util.*;
 
 public final class VoxelTrailRenderer {
-    private static final int MAX_POINTS = 22;
+    private static final int MAX_POINTS = 24;
     private static final Map<UUID, Deque<Vec3d>> TRAILS = new HashMap<>();
 
     private VoxelTrailRenderer() {}
 
     public static void tick(MinecraftClient client) {
         if (client.world == null || client.isPaused()) return;
-
         Set<UUID> activeIds = new HashSet<>();
+
         for (PlayerEntity player : client.world.getPlayers()) {
             PlayerLanternComponent data = ModComponents.LANTERN.get(player);
             boolean flying = data.getActiveCorps() != null && data.isSuitActive()
@@ -31,9 +31,7 @@ public final class VoxelTrailRenderer {
                 activeIds.add(player.getUuid());
                 Deque<Vec3d> deque = TRAILS.computeIfAbsent(player.getUuid(), id -> new ArrayDeque<>());
                 deque.addFirst(player.getPos().add(0, player.getHeight() * 0.45, 0));
-                while (deque.size() > MAX_POINTS) {
-                    deque.removeLast();
-                }
+                while (deque.size() > MAX_POINTS) deque.removeLast();
             }
         }
         TRAILS.keySet().removeIf(id -> {
@@ -68,57 +66,30 @@ public final class VoxelTrailRenderer {
 
             PlayerLanternComponent data = ModComponents.LANTERN.get(player);
             int argb = data.getDisplayArgb();
-            int r = (argb >> 16) & 0xFF;
-            int g = (argb >> 8) & 0xFF;
-            int b = argb & 0xFF;
+            int r = (argb >> 16) & 0xFF, g = (argb >> 8) & 0xFF, b = argb & 0xFF;
 
             List<Vec3d> list = new ArrayList<>(points);
             for (int i = 0; i < list.size() - 1; i++) {
-                float progress = 1.0f - (i / (float) list.size());
-                float halfSize = 0.08f + 0.14f * progress;
-                int alpha = (int) (175 * progress);
-                Vec3d p = list.get(i);
-                drawVoxelBox(entry, vc, p.x, p.y, p.z, halfSize, r, g, b, alpha);
-            }
+                Vec3d p0 = list.get(i), p1 = list.get(i + 1);
+                Vec3d dir = p1.subtract(p0);
+                if (dir.lengthSquared() < 1e-6) continue;
 
-            // Sonic Boom вспышка на высокой скорости (> 1.4 блоков/тик)
-            double speed = player.getVelocity().length();
-            if (speed > 1.4 && data.isSuitActive()) {
-                Vec3d look = player.getRotationVec(1.0f);
-                Vec3d center = player.getPos().add(0, player.getHeight() * 0.5, 0).add(look.multiply(0.9));
-                float pulse = 0.45f + 0.12f * (float) Math.sin((player.age + context.tickCounter().getTickDelta(false)) * 0.9f);
-                drawVoxelBox(entry, vc, center.x, center.y, center.z, pulse, 220, 255, 255, 75);
+                float t0 = 1.0f - (i / (float) list.size());
+                float t1 = 1.0f - ((i + 1) / (float) list.size());
+                Vec3d side = dir.crossProduct(cam.subtract(p0));
+                if (side.lengthSquared() < 1e-6) side = new Vec3d(0, 1, 0);
+                side = side.normalize();
+
+                Vec3d s0 = side.multiply(0.18 * t0);
+                Vec3d s1 = side.multiply(0.18 * t1);
+                int a0 = (int) (170 * t0), a1 = (int) (170 * t1);
+
+                vc.vertex(entry, (float)(p0.x - s0.x), (float)(p0.y - s0.y), (float)(p0.z - s0.z)).color(r, g, b, a0);
+                vc.vertex(entry, (float)(p0.x + s0.x), (float)(p0.y + s0.y), (float)(p0.z + s0.z)).color(r, g, b, a0);
+                vc.vertex(entry, (float)(p1.x + s1.x), (float)(p1.y + s1.y), (float)(p1.z + s1.z)).color(r, g, b, a1);
+                vc.vertex(entry, (float)(p1.x - s1.x), (float)(p1.y - s1.y), (float)(p1.z - s1.z)).color(r, g, b, a1);
             }
         }
-
         matrices.pop();
-    }
-
-    private static void drawVoxelBox(MatrixStack.Entry entry, VertexConsumer vc,
-                                     double cx, double cy, double cz, float s,
-                                     int r, int g, int b, int a) {
-        float x0 = (float) (cx - s), x1 = (float) (cx + s);
-        float y0 = (float) (cy - s), y1 = (float) (cy + s);
-        float z0 = (float) (cz - s), z1 = (float) (cz + s);
-
-        // 6 граней светящегося вокселя
-        quad(entry, vc, x0, y0, z1, x1, y0, z1, x1, y1, z1, x0, y1, z1, r, g, b, a);
-        quad(entry, vc, x1, y0, z0, x0, y0, z0, x0, y1, z0, x1, y1, z0, r, g, b, a);
-        quad(entry, vc, x0, y0, z0, x0, y0, z1, x0, y1, z1, x0, y1, z0, r, g, b, a);
-        quad(entry, vc, x1, y0, z1, x1, y0, z0, x1, y1, z0, x1, y1, z1, r, g, b, a);
-        quad(entry, vc, x0, y1, z1, x1, y1, z1, x1, y1, z0, x0, y1, z0, r, g, b, a);
-        quad(entry, vc, x0, y0, z0, x1, y0, z0, x1, y0, z1, x0, y0, z1, r, g, b, a);
-    }
-
-    private static void quad(MatrixStack.Entry e, VertexConsumer vc,
-                             float x1, float y1, float z1,
-                             float x2, float y2, float z2,
-                             float x3, float y3, float z3,
-                             float x4, float y4, float z4,
-                             int r, int g, int b, int a) {
-        vc.vertex(e, x1, y1, z1).color(r, g, b, a);
-        vc.vertex(e, x2, y2, z2).color(r, g, b, a);
-        vc.vertex(e, x3, y3, z3).color(r, g, b, a);
-        vc.vertex(e, x4, y4, z4).color(r, g, b, a);
     }
 }
