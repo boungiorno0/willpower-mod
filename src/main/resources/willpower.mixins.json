@@ -3,7 +3,8 @@
   "package": "com.example.willpower.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "PlayerEntityModelMixin"
+    "PlayerEntityModelMixin",
+    "PlayerEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
