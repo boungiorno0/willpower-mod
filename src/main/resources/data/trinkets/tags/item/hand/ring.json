@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "willpower:green_ring",
+    "willpower:yellow_ring",
+    "willpower:blue_ring",
+    "willpower:red_ring",
+    "willpower:orange_ring",
+    "willpower:indigo_ring",
+    "willpower:violet_ring",
+    "willpower:white_ring",
+    "willpower:black_ring"
+  ]
+}
