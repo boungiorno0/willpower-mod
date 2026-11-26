@@ -1,5 +1,6 @@
 package com.example.willpower.mixin;
 
+import com.example.willpower.client.FlightAnimState;
 import com.example.willpower.component.ModComponents;
 import com.example.willpower.component.PlayerLanternComponent;
 import net.minecraft.client.model.ModelPart;
@@ -7,6 +8,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Arm;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -29,29 +31,31 @@ public class PlayerEntityModelMixin<T extends LivingEntity> {
         float sideSign = leftMain ? -1.0f : 1.0f;
 
         boolean flying = player.getAbilities().flying || player.isFallFlying();
+        float tilt = FlightAnimState.getTilt(player);
         int pose = data.getActivePose();
 
         if (flying) {
-            // Классический полёт Фонаря: ведущая рука с кольцом вытянута вперёд
-            ringArm.pitch = -1.62f + (float) Math.toRadians(headPitch) * 0.45f;
+            float sway = (float) Math.sin(animationProgress * 0.14f) * 0.06f;
+            // Плавный переход от парения (рука вперёд) к полному полёту (рука вытянута над головой)
+            ringArm.pitch = MathHelper.lerp(tilt, -1.45f, -3.08f);
             ringArm.yaw = 0.0f;
-            ringArm.roll = 0.08f * sideSign;
-            offArm.pitch = 0.35f;
-            offArm.roll = -0.18f * sideSign;
-            m.rightLeg.pitch = 0.28f;
-            m.leftLeg.pitch = 0.42f;
+            ringArm.roll = MathHelper.lerp(tilt, 0.08f, -0.05f) * sideSign;
+
+            offArm.pitch = MathHelper.lerp(tilt, 0.25f, 0.12f) + sway;
+            offArm.roll = MathHelper.lerp(tilt, -0.18f, -0.10f) * sideSign;
+
+            m.head.pitch = MathHelper.lerp(tilt, m.head.pitch, -1.05f);
+            m.rightLeg.pitch = MathHelper.lerp(tilt, 0.22f, 0.06f) + sway;
+            m.leftLeg.pitch = MathHelper.lerp(tilt, 0.34f, 0.12f) - sway;
         } else if (pose == 1) {
-            // Боевая стойка: рука направлена вперёд
             ringArm.pitch = -1.45f;
             ringArm.yaw = 0.0f;
             offArm.pitch = 0.3f;
         } else if (pose == 2) {
-            // Героическая поза: кулак вверх
             ringArm.pitch = -2.65f;
             ringArm.roll = 0.15f * sideSign;
             offArm.pitch = 0.25f;
         } else if (pose == 3) {
-            // Поза медитации (для Синих/Белых и парения)
             m.rightArm.pitch = -0.85f;
             m.rightArm.yaw = -0.45f;
             m.leftArm.pitch = -0.85f;
@@ -62,7 +66,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> {
             m.leftLeg.roll = 0.35f;
         }
 
-        // Синхронизируем второй слой скина с руками и ногами
+        m.hat.copyTransform(m.head);
         m.rightSleeve.copyTransform(m.rightArm);
         m.leftSleeve.copyTransform(m.leftArm);
         m.rightPants.copyTransform(m.rightLeg);
