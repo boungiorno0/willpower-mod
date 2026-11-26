@@ -22,7 +22,7 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
     private static boolean textureRegistered = false;
 
     private final ModelPart helmetTop, helmetSides, visorStrip;
-    private final ModelPart torsoBase, collar, chestPlate, absBelt, chestEmblem;
+    private final ModelPart torsoBase, collar, chestPlate, absBelt;
     private final ModelPart rSleeve, lSleeve, rPauldron, lPauldron, rGauntlet, lGauntlet;
     private final ModelPart legBase, thighPlate, kneeGuard, bootShell;
 
@@ -36,7 +36,6 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
         this.collar = box(-4.5f, -0.9f, -2.5f, 9.0f, 1.5f, 5.0f);
         this.chestPlate = box(-4.45f, 0.5f, -2.55f, 8.9f, 5.8f, 5.1f);
         this.absBelt = box(-4.3f, 6.5f, -2.35f, 8.6f, 4.8f, 4.7f);
-        this.chestEmblem = box(-1.45f, 1.7f, -2.72f, 2.9f, 2.9f, 0.25f);
 
         this.rSleeve = box(-3.15f, -2.0f, -2.15f, 4.3f, 12.0f, 4.3f);
         this.lSleeve = box(-1.15f, -2.0f, -2.15f, 4.3f, 12.0f, 4.3f);
@@ -63,10 +62,10 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
             for (int y = 0; y < 16; y++) {
                 for (int x = 0; x < 16; x++) {
                     int shade = 205;
-                    if (x == 0 || y == 0 || x == 15 || y == 15) shade = 95;
+                    if (x == 0 || y == 0 || x == 15 || y == 15) shade = 92;
                     else if (x == 1 || y == 1) shade = 248;
-                    else if (x == 14 || y == 14 || y == 7) shade = 140;
-                    else if (((x + y) & 1) == 0) shade = 190;
+                    else if (x == 14 || y == 14 || y == 7) shade = 138;
+                    else if (((x + y) & 1) == 0) shade = 188;
                     img.setColor(x, y, 0xFF000000 | (shade << 16) | (shade << 8) | shade);
                 }
             }
@@ -93,16 +92,10 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
             case WHITE -> 0xFFE6F0F4;
             default -> comic ? (0xFF000000 | rgb) : scaleRgb(rgb, 0.78f);
         };
-        int emblemGlow = switch (corps) {
-            case BLACK -> 0xDDE5EBF5;
-            case WHITE -> 0xEEFFFFFF;
-            default -> 0xCC000000 | rgb;
-        };
 
         var model = getContextModel();
         VertexConsumer solidVc = consumers.getBuffer(RenderLayer.getEntityTranslucent(getExoTexture()));
 
-        // Основа (тёмный экзо-подкостюм)
         part(matrices, model.body, torsoBase, solidVc, light, underColor);
         part(matrices, model.body, absBelt, solidVc, light, 0xFF1D2028);
         part(matrices, model.rightArm, rSleeve, solidVc, light, underColor);
@@ -110,7 +103,6 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
         part(matrices, model.rightLeg, legBase, solidVc, light, underColor);
         part(matrices, model.leftLeg, legBase, solidVc, light, underColor);
 
-        // Цветные бронепластины
         part(matrices, model.body, collar, solidVc, light, plateColor);
         part(matrices, model.body, chestPlate, solidVc, light, plateColor);
         part(matrices, model.rightArm, rPauldron, solidVc, light, plateColor);
@@ -129,14 +121,29 @@ public class LanternSuitFeatureRenderer extends FeatureRenderer<AbstractClientPl
             part(matrices, model.head, helmetSides, solidVc, light, underColor);
         }
 
-        // Светящиеся элементы (визор и нагрудный знак) — строго отдельным слоем после solidVc
-        VertexConsumer glowVc = consumers.getBuffer(HardLightRenderLayers.getHardLightGlow(WHITE_TEX));
-        part(matrices, model.body, chestEmblem, glowVc, LightmapTextureManager.MAX_LIGHT_COORDINATE, emblemGlow);
+        // Уникальное светящееся лого корпуса прямо на груди (с полной 16x16 развёрткой!)
+        matrices.push();
+        model.body.rotate(matrices);
+        matrices.translate(0.0f, 0.21f, -0.165f);
+        matrices.scale(0.24f, 0.24f, 0.24f);
+        VertexConsumer emblemVc = consumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(CorpsEmblemTextures.get(corps)));
+        int er = (corps == LanternCorps.BLACK || corps == LanternCorps.WHITE) ? 255 : Math.min(255, ((rgb >> 16) & 0xFF) + 70);
+        int eg = (corps == LanternCorps.BLACK || corps == LanternCorps.WHITE) ? 255 : Math.min(255, ((rgb >> 8) & 0xFF) + 70);
+        int eb = (corps == LanternCorps.BLACK || corps == LanternCorps.WHITE) ? 255 : Math.min(255, (rgb & 0xFF) + 70);
+        var entry = matrices.peek();
+        emblemVc.vertex(entry, -0.5f, -0.5f, 0).color(er, eg, eb, 255).texture(0, 0).overlay(OverlayTexture.DEFAULT_UV).light(LightmapTextureManager.MAX_LIGHT_COORDINATE).normal(entry, 0, 0, -1);
+        emblemVc.vertex(entry,  0.5f, -0.5f, 0).color(er, eg, eb, 255).texture(1, 0).overlay(OverlayTexture.DEFAULT_UV).light(LightmapTextureManager.MAX_LIGHT_COORDINATE).normal(entry, 0, 0, -1);
+        emblemVc.vertex(entry,  0.5f,  0.5f, 0).color(er, eg, eb, 255).texture(1, 1).overlay(OverlayTexture.DEFAULT_UV).light(LightmapTextureManager.MAX_LIGHT_COORDINATE).normal(entry, 0, 0, -1);
+        emblemVc.vertex(entry, -0.5f,  0.5f, 0).color(er, eg, eb, 255).texture(0, 1).overlay(OverlayTexture.DEFAULT_UV).light(LightmapTextureManager.MAX_LIGHT_COORDINATE).normal(entry, 0, 0, -1);
+        matrices.pop();
+
+        // Визор на шлеме — строго новым буфером после emblemVc
         if (data.isMaskActive()) {
+            VertexConsumer visorVc = consumers.getBuffer(HardLightRenderLayers.getHardLightGlow(WHITE_TEX));
             matrices.push();
             model.head.rotate(matrices);
             matrices.translate(0.0f, -data.getMaskHeight() * 0.0625f, 0.0f);
-            visorStrip.render(matrices, glowVc, LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0x88353942);
+            visorStrip.render(matrices, visorVc, LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 0x88353942);
             matrices.pop();
         }
     }
