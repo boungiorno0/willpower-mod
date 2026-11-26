@@ -1,9 +1,9 @@
 package com.example.willpower.core;
 
-import com.example.willpower.ModBlocks;
 import com.example.willpower.component.ModComponents;
 import com.example.willpower.component.PlayerLanternComponent;
-import net.minecraft.block.Blocks;
+import com.example.willpower.entity.ConstructEntity;
+import com.example.willpower.entity.ModEntities;
 import net.minecraft.block.Fertilizable;
 import net.minecraft.entity.*;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -33,13 +33,16 @@ public final class CorpsAbilities {
         LanternCorps corps = data.getActiveCorps();
         if (corps == null || !data.consumeCharge(180)) return;
 
+        int argb = data.getDisplayArgb();
         LivingEntity aimed = raycastLiving(player, 22.0);
         switch (corps) {
             case GREEN -> {
-                if (aimed != null) buildCage(world, aimed.getBlockPos());
+                spawnAt(world, player, player.getPos().add(0, 1.0, 0), ConstructEntity.Kind.DOME, argb);
+                if (aimed != null) spawnAt(world, player, aimed.getPos(), ConstructEntity.Kind.CAGE, argb);
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 1));
             }
             case YELLOW -> {
+                if (aimed != null) spawnAt(world, player, aimed.getPos(), ConstructEntity.Kind.CAGE, argb);
                 for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(10), x -> x != player)) {
                     e.addStatusEffect(new StatusEffectInstance(StatusEffects.DARKNESS, 140, 0));
                     e.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 120, 2));
@@ -49,6 +52,7 @@ public final class CorpsAbilities {
                 }
             }
             case BLUE -> {
+                spawnAt(world, player, player.getPos().add(0, 1.0, 0), ConstructEntity.Kind.DOME, argb);
                 for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(10), x -> x == player || x instanceof PlayerEntity)) {
                     e.heal(8.0f);
                     e.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 120, 1));
@@ -86,10 +90,11 @@ public final class CorpsAbilities {
                 if (aimed != null) {
                     aimed.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 120, 250));
                     aimed.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, 120, 0));
-                    buildCage(world, aimed.getBlockPos());
+                    spawnAt(world, player, aimed.getPos(), ConstructEntity.Kind.CAGE, argb);
                 }
             }
             case WHITE -> {
+                spawnAt(world, player, player.getPos().add(0, 1.0, 0), ConstructEntity.Kind.DOME, argb);
                 player.heal(20.0f);
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 200, 1));
                 for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(11), x -> x != player)) {
@@ -101,6 +106,7 @@ public final class CorpsAbilities {
                 growCropsAround(world, player.getBlockPos(), 4);
             }
             case BLACK -> {
+                spawnAt(world, player, player.getPos().add(0, 1.0, 0), ConstructEntity.Kind.DOME, argb);
                 for (int i = 0; i < 2; i++) {
                     ZombieEntity z = EntityType.ZOMBIE.create(world);
                     if (z != null) {
@@ -119,23 +125,20 @@ public final class CorpsAbilities {
         world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 1.0f, 1.15f);
     }
 
+    private static void spawnAt(ServerWorld world, PlayerEntity owner, Vec3d pos, ConstructEntity.Kind kind, int argb) {
+        ConstructEntity c = ModEntities.CONSTRUCT.create(world);
+        if (c != null) {
+            c.configureAt(owner, pos, kind, argb, SpectrumSynergy.getPowerMultiplier(owner));
+            world.spawnEntity(c);
+        }
+    }
+
     private static LivingEntity raycastLiving(PlayerEntity player, double range) {
         Vec3d eye = player.getEyePos();
         Vec3d end = eye.add(player.getRotationVec(1.0f).multiply(range));
         Box box = player.getBoundingBox().stretch(player.getRotationVec(1.0f).multiply(range)).expand(1.5);
         EntityHitResult res = ProjectileUtil.raycast(player, eye, end, box, e -> e instanceof LivingEntity && e != player, range * range);
         return res != null ? (LivingEntity) res.getEntity() : null;
-    }
-
-    private static void buildCage(ServerWorld world, BlockPos c) {
-        for (int dx = -1; dx <= 1; dx++)
-            for (int dy = 0; dy <= 2; dy++)
-                for (int dz = -1; dz <= 1; dz++)
-                    if (Math.abs(dx) == 1 || Math.abs(dz) == 1 || dy == 2) {
-                        BlockPos p = c.add(dx, dy, dz);
-                        if (world.getBlockState(p).isAir() || world.getBlockState(p).isOf(Blocks.SHORT_GRASS))
-                            world.setBlockState(p, ModBlocks.WILL_CONSTRUCT.getDefaultState());
-                    }
     }
 
     private static void growCropsAround(ServerWorld world, BlockPos c, int r) {
