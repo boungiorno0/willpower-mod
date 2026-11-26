@@ -8,12 +8,9 @@ import com.example.willpower.entity.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 
 public class WillpowerClient implements ClientModInitializer {
@@ -21,6 +18,7 @@ public class WillpowerClient implements ClientModInitializer {
     public void onInitializeClient() {
         BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.WILL_CONSTRUCT, RenderLayer.getTranslucent());
         EntityRendererRegistry.register(ModEntities.CONSTRUCT, ConstructEntityRenderer::new);
+        BlockEntityRendererFactories.register(ModBlocks.POWER_LANTERN_ENTITY, ctx -> new PowerLanternGeoRenderers.BlockGeoRenderer());
         LanternModelPlugin.register();
 
         for (LanternCorps corps : LanternCorps.values()) {
