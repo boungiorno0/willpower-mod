@@ -6,7 +6,12 @@ import net.minecraft.util.Identifier;
 
 public final class LanternModelPlugin {
     private static final String RING_3D = buildRingJson();
-    private static final String LANTERN_3D = buildLanternJson();
+    private static final String LANTERN_BUILTIN =
+            "{\"parent\":\"minecraft:builtin/entity\",\"gui_light\":\"side\",\"display\":{"
+            + "\"gui\":{\"rotation\":[25,45,0],\"translation\":[0,-1,0],\"scale\":[0.75,0.75,0.75]},"
+            + "\"firstperson_righthand\":{\"rotation\":[0,45,0],\"translation\":[0,1.5,0],\"scale\":[0.45,0.45,0.45]},"
+            + "\"thirdperson_righthand\":{\"rotation\":[15,45,0],\"translation\":[0,1.5,0.5],\"scale\":[0.45,0.45,0.45]}"
+            + "}}";
 
     private LanternModelPlugin() {}
 
@@ -19,7 +24,7 @@ public final class LanternModelPlugin {
                 return JsonUnbakedModel.deserialize(RING_3D);
             }
             if (path.startsWith("item/") && path.endsWith("_lantern")) {
-                return JsonUnbakedModel.deserialize(LANTERN_3D);
+                return JsonUnbakedModel.deserialize(LANTERN_BUILTIN);
             }
             return null;
         }));
@@ -40,27 +45,6 @@ public final class LanternModelPlugin {
             + "\"gui\":{\"rotation\":[30,45,0],\"translation\":[0,-0.5,0],\"scale\":[1.45,1.45,1.45]},"
             + "\"firstperson_righthand\":{\"rotation\":[0,45,0],\"translation\":[0,2,0],\"scale\":[0.55,0.55,0.55]},"
             + "\"thirdperson_righthand\":{\"rotation\":[75,45,0],\"translation\":[0,2.5,0],\"scale\":[0.45,0.45,0.45]}"
-            + "}}";
-    }
-
-    private static String buildLanternJson() {
-        return "{"
-            + "\"gui_light\":\"side\","
-            + "\"textures\":{\"metal\":\"minecraft:block/netherite_block\",\"gem\":\"minecraft:block/white_concrete\",\"particle\":\"minecraft:block/white_concrete\"},"
-            + "\"elements\":["
-            + box(4, 1, 4, 12, 3, 12, "#metal", false) + ","
-            + box(4, 11, 4, 12, 13, 12, "#metal", false) + ","
-            + box(5, 13, 7, 11, 15.5f, 9, "#metal", false) + ","
-            + box(4.2f, 3, 4.2f, 5.6f, 11, 5.6f, "#metal", false) + ","
-            + box(10.4f, 3, 4.2f, 11.8f, 11, 5.6f, "#metal", false) + ","
-            + box(4.2f, 3, 10.4f, 5.6f, 11, 11.8f, "#metal", false) + ","
-            + box(10.4f, 3, 10.4f, 11.8f, 11, 11.8f, "#metal", false) + ","
-            + box(5.2f, 3, 5.2f, 10.8f, 11, 10.8f, "#gem", true)
-            + "],"
-            + "\"display\":{"
-            + "\"gui\":{\"rotation\":[30,225,0],\"translation\":[0,-0.5,0],\"scale\":[0.85,0.85,0.85]},"
-            + "\"firstperson_righthand\":{\"rotation\":[0,45,0],\"translation\":[0,2,0],\"scale\":[0.5,0.5,0.5]},"
-            + "\"thirdperson_righthand\":{\"rotation\":[15,45,0],\"translation\":[0,2,1],\"scale\":[0.5,0.5,0.5]}"
             + "}}";
     }
 
