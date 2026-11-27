@@ -12,6 +12,7 @@ import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.EntityTypeTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -23,6 +24,8 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.List;
 
 public final class CorpsAbilities {
     private CorpsAbilities() {}
@@ -42,7 +45,14 @@ public final class CorpsAbilities {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 120, 1));
             }
             case YELLOW -> {
-                if (aimed != null) spawnAt(world, player, aimed.getPos(), ConstructEntity.Kind.CAGE, argb);
+                if (aimed != null) {
+                    spawnAt(world, player, aimed.getPos(), ConstructEntity.Kind.CAGE, argb);
+                    LightningEntity bolt = EntityType.LIGHTNING_BOLT.create(world);
+                    if (bolt != null) {
+                        bolt.refreshPositionAfterTeleport(aimed.getPos());
+                        world.spawnEntity(bolt);
+                    }
+                }
                 for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(10), x -> x != player)) {
                     e.addStatusEffect(new StatusEffectInstance(StatusEffects.DARKNESS, 140, 0));
                     e.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 120, 2));
@@ -59,6 +69,8 @@ public final class CorpsAbilities {
                 }
             }
             case RED -> {
+                player.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 120, 1));
+                world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getBodyY(0.5), player.getZ(), 45, 2.5, 1.0, 2.5, 0.08);
                 for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(7), x -> x != player)) {
                     e.setOnFireFor(6);
                     e.damage(world.getDamageSources().inFire(), 9.0f);
@@ -85,6 +97,7 @@ public final class CorpsAbilities {
                     Vec3d p = hit.getPos();
                     player.requestTeleport(p.x, p.y + 0.5, p.z);
                 }
+                world.spawnParticles(ParticleTypes.PORTAL, player.getX(), player.getBodyY(0.5), player.getZ(), 30, 0.5, 1.0, 0.5, 0.2);
             }
             case STAR_SAPPHIRE -> {
                 if (aimed != null) {
@@ -106,19 +119,26 @@ public final class CorpsAbilities {
                 growCropsAround(world, player.getBlockPos(), 4);
             }
             case BLACK -> {
-                spawnAt(world, player, player.getPos().add(0, 1.0, 0), ConstructEntity.Kind.DOME, argb);
+                world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getBodyY(0.5), player.getZ(), 50, 2.5, 1.0, 2.5, 0.05);
+                List<LivingEntity> foes = world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(10),
+                        x -> x != player && !(x.hasCustomName() && "Black Thrall".equals(x.getCustomName().getString())));
+                for (LivingEntity e : foes) {
+                    e.addStatusEffect(new StatusEffectInstance(StatusEffects.WITHER, 100, 1));
+                    e.damage(world.getDamageSources().wither(), 8.0f);
+                    player.heal(3.0f);
+                }
+                LivingEntity target = foes.isEmpty() ? null : foes.getFirst();
                 for (int i = 0; i < 2; i++) {
                     ZombieEntity z = EntityType.ZOMBIE.create(world);
                     if (z != null) {
-                        z.refreshPositionAndAngles(player.getX() + (i == 0 ? 1.5 : -1.5), player.getY(), player.getZ(), 0, 0);
-                        z.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 600, 0));
-                        z.setCustomName(Text.literal("Black Lantern Thrall"));
+                        z.refreshPositionAndAngles(player.getX() + (i == 0 ? 1.8 : -1.8), player.getY(), player.getZ(), 0, 0);
+                        z.addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
+                        z.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 800, 1));
+                        z.addStatusEffect(new StatusEffectInstance(StatusEffects.STRENGTH, 800, 1));
+                        z.setCustomName(Text.literal("Black Thrall"));
+                        if (target != null) z.setTarget(target);
                         world.spawnEntity(z);
                     }
-                }
-                for (LivingEntity e : world.getEntitiesByClass(LivingEntity.class, player.getBoundingBox().expand(8), x -> x != player)) {
-                    e.damage(world.getDamageSources().wither(), 6.0f);
-                    player.heal(2.5f);
                 }
             }
         }
