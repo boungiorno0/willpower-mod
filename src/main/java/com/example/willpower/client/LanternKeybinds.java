@@ -17,8 +17,14 @@ public final class LanternKeybinds {
     private static final long DEFAULT_EYES = (1L << 33) | (1L << 34) | (1L << 37) | (1L << 38);
 
     private static KeyBinding openMenuKey, toggleSuitKey, cycleSpeedKey, signatureKey, tractorKey;
+    private static long signatureReadyMs = 0L;
 
     private LanternKeybinds() {}
+
+    public static float getSignatureCooldownLeftSec() {
+        long left = signatureReadyMs - System.currentTimeMillis();
+        return left > 0 ? left / 1000.0f : 0.0f;
+    }
 
     public static void init() {
         openMenuKey = reg("key.willpower.open_menu", GLFW.GLFW_KEY_K);
@@ -61,8 +67,12 @@ public final class LanternKeybinds {
             }
 
             while (signatureKey.wasPressed()) {
-                if (d.getActiveCorps() != null) {
-                    ClientPlayNetworking.send(new LanternActionPayload(LanternActionPayload.ACTION_SIGNATURE));
+                if (d.getActiveCorps() != null && d.getCharge() > 0) {
+                    long now = System.currentTimeMillis();
+                    if (now >= signatureReadyMs) {
+                        signatureReadyMs = now + 3000L;
+                        ClientPlayNetworking.send(new LanternActionPayload(LanternActionPayload.ACTION_SIGNATURE));
+                    }
                 }
             }
 
