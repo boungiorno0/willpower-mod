@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.*;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.item.Item;
 
 public class WillpowerClient implements ClientModInitializer {
     @Override
@@ -22,10 +23,16 @@ public class WillpowerClient implements ClientModInitializer {
         LanternModelPlugin.register();
 
         for (LanternCorps corps : LanternCorps.values()) {
-            int tint = corps == LanternCorps.BLACK ? 0xFF5A5A70 : (0xFF000000 | corps.getBaseRgb());
-            ColorProviderRegistry.ITEM.register((stack, tintIndex) -> tintIndex == 0 ? tint : -1,
-                    ModCorpsRegistry.RINGS.get(corps),
-                    ModCorpsRegistry.LANTERNS.get(corps));
+            Item ring = ModCorpsRegistry.RINGS.get(corps);
+            if (ring != null) {
+                int ringTint = corps == LanternCorps.BLACK ? 0xFF5A5A70 : (0xFF000000 | corps.getBaseRgb());
+                ColorProviderRegistry.ITEM.register((stack, tintIndex) -> tintIndex == 0 ? ringTint : -1, ring);
+            }
+            Item lantern = ModCorpsRegistry.LANTERNS.get(corps);
+            if (lantern != null) {
+                int lanTint = 0xFF000000 | corps.getBaseRgb();
+                ColorProviderRegistry.ITEM.register((stack, tintIndex) -> tintIndex == 0 ? lanTint : -1, lantern);
+            }
         }
 
         LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
