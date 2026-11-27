@@ -28,7 +28,7 @@ public final class ModCorpsRegistry {
                     .entries((ctx, entries) -> {
                         for (LanternCorps corps : LanternCorps.values()) {
                             entries.add(RINGS.get(corps));
-                            entries.add(LANTERNS.get(corps));
+                            if (LANTERNS.containsKey(corps)) entries.add(LANTERNS.get(corps));
                         }
                         entries.add(ModBlocks.WILL_RESERVOIR);
                     })
@@ -42,13 +42,16 @@ public final class ModCorpsRegistry {
                     WillpowerMod.id(corps.getId() + "_ring"),
                     new CorpsRingItem(corps, new Item.Settings().maxCount(1).rarity(Rarity.EPIC))
             );
-            Item lantern = Registry.register(
-                    Registries.ITEM,
-                    WillpowerMod.id(corps.getId() + "_lantern"),
-                    new PowerLanternItem(corps, new Item.Settings().maxCount(1).rarity(Rarity.RARE))
-            );
             RINGS.put(corps, ring);
-            LANTERNS.put(corps, lantern);
+
+            if (corps != LanternCorps.WHITE && corps != LanternCorps.BLACK) {
+                Item lantern = Registry.register(
+                        Registries.ITEM,
+                        WillpowerMod.id(corps.getId() + "_lantern"),
+                        new PowerLanternItem(corps, new Item.Settings().maxCount(1).rarity(Rarity.RARE))
+                );
+                LANTERNS.put(corps, lantern);
+            }
         }
     }
 
