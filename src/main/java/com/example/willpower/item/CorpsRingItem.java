@@ -1,5 +1,6 @@
 package com.example.willpower.item;
 
+import com.example.willpower.client.render.IndigoStaffGeoRenderer;
 import com.example.willpower.client.render.PowerRingGeoRenderer;
 import com.example.willpower.component.ModComponents;
 import com.example.willpower.component.PlayerLanternComponent;
@@ -31,6 +32,7 @@ import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
 import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
@@ -39,7 +41,8 @@ import java.util.function.Consumer;
 public class CorpsRingItem extends TrinketItem implements GeoItem {
     private static final String MODE_KEY = "construct_kind";
     private static final long DEFAULT_EYES_MASK = (1L << 33) | (1L << 34) | (1L << 37) | (1L << 38);
-    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("animation.power_ring.idle");
+    private static final RawAnimation RING_ANIM = RawAnimation.begin().thenLoop("animation.power_ring.idle");
+    private static final RawAnimation STAFF_ANIM = RawAnimation.begin().thenLoop("animation.indigo_staff.idle");
 
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final LanternCorps corps;
@@ -190,10 +193,14 @@ public class CorpsRingItem extends TrinketItem implements GeoItem {
     @Override
     public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
         consumer.accept(new GeoRenderProvider() {
-            private PowerRingGeoRenderer renderer;
+            private GeoItemRenderer<CorpsRingItem> renderer;
             @Override
             public BuiltinModelItemRenderer getGeoItemRenderer() {
-                if (this.renderer == null) this.renderer = new PowerRingGeoRenderer();
+                if (this.renderer == null) {
+                    this.renderer = (corps == LanternCorps.INDIGO)
+                            ? new IndigoStaffGeoRenderer()
+                            : new PowerRingGeoRenderer();
+                }
                 return this.renderer;
             }
         });
@@ -201,7 +208,8 @@ public class CorpsRingItem extends TrinketItem implements GeoItem {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "idle", 0, state -> state.setAndContinue(IDLE_ANIM)));
+        controllers.add(new AnimationController<>(this, "idle", 0,
+                state -> state.setAndContinue(corps == LanternCorps.INDIGO ? STAFF_ANIM : RING_ANIM)));
     }
 
     @Override
