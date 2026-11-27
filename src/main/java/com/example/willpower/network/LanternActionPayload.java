@@ -18,6 +18,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -39,11 +40,10 @@ public record LanternActionPayload(int action) implements CustomPayload {
     );
 
     private static final Map<UUID, Integer> HELD_ENTITIES = new HashMap<>();
+    private static final Map<UUID, Long> SIGNATURE_COOLDOWN = new HashMap<>();
 
     @Override
-    public Id<? extends CustomPayload> getId() {
-        return ID;
-    }
+    public Id<? extends CustomPayload> getId() { return ID; }
 
     public static void registerServer() {
         PayloadTypeRegistry.playC2S().register(ID, CODEC);
@@ -54,8 +54,7 @@ public record LanternActionPayload(int action) implements CustomPayload {
         ServerTickEvents.END_WORLD_TICK.register(world -> {
             for (ServerPlayerEntity player : world.getPlayers()) {
                 Integer entityId = HELD_ENTITIES.get(player.getUuid());
-                if (entityId == null) continue;
-                tickTractorHold(world, player, entityId);
+                if (entityId != null) tickTractorHold(world, player, entityId);
             }
         });
     }
@@ -68,6 +67,14 @@ public record LanternActionPayload(int action) implements CustomPayload {
         }
 
         if (action == ACTION_SIGNATURE) {
+            long now = player.getWorld().getTime();
+            long readyAt = SIGNATURE_COOLDOWN.getOrDefault(player.getUuid(), 0L);
+            if (now < readyAt) {
+                float sec = (readyAt - now) / 20.0f;
+                player.sendMessage(Text.literal(String.format("Перезарядка: %.1f сек", sec)), true);
+                return;
+            }
+            SIGNATURE_COOLDOWN.put(player.getUuid(), now + 60L);
             CorpsAbilities.triggerSignature(player);
             return;
         }
@@ -77,8 +84,7 @@ public record LanternActionPayload(int action) implements CustomPayload {
             Entity target = player.getServerWorld().getEntityById(heldId);
             HELD_ENTITIES.remove(player.getUuid());
             if (target != null && action == ACTION_TRACTOR_TOGGLE) {
-                Vec3d launch = player.getRotationVec(1.0f).multiply(2.4).add(0, 0.75, 0);
-                target.setVelocity(launch);
+                target.setVelocity(player.getRotationVec(1.0f).multiply(2.4).add(0, 0.75, 0));
                 target.velocityModified = true;
                 player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ENDER_DRAGON_FLAP, SoundCategory.PLAYERS, 0.8f, 1.4f);
             }
@@ -101,7 +107,6 @@ public record LanternActionPayload(int action) implements CustomPayload {
             HELD_ENTITIES.remove(player.getUuid());
             return;
         }
-
         Vec3d start = player.getEyePos().add(0, -0.2, 0);
         Vec3d goal = player.getEyePos().add(player.getRotationVec(1.0f).multiply(6.5));
         target.setVelocity(goal.subtract(target.getPos()).multiply(0.55));
@@ -109,9 +114,7 @@ public record LanternActionPayload(int action) implements CustomPayload {
         target.fallDistance = 0.0f;
 
         int argb = data.getDisplayArgb();
-        Vector3f col = new Vector3f(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f, (argb & 0xFF) / 255f);
-        DustParticleEffect dust = new DustParticleEffect(col, 1.1f);
-
+        DustParticleEffect dust = new DustParticleEffect(new Vector3f(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f, (argb & 0xFF) / 255f), 1.1f);
         Vec3d end = target.getPos().add(0, target.getHeight() * 0.5, 0);
         for (int i = 1; i <= 10; i++) {
             Vec3d p = start.lerp(end, i / 10.0);
