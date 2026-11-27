@@ -1,5 +1,6 @@
 package com.example.willpower.item;
 
+import com.example.willpower.client.render.PowerRingGeoRenderer;
 import com.example.willpower.component.ModComponents;
 import com.example.willpower.component.PlayerLanternComponent;
 import com.example.willpower.core.LanternCorps;
@@ -9,6 +10,7 @@ import com.example.willpower.entity.ModEntities;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketItem;
 import dev.emi.trinkets.api.TrinketsApi;
+import net.minecraft.client.render.item.BuiltinModelItemRenderer;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.Entity;
@@ -23,13 +25,23 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
+import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.client.GeoRenderProvider;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.List;
+import java.util.function.Consumer;
 
-public class CorpsRingItem extends TrinketItem {
+public class CorpsRingItem extends TrinketItem implements GeoItem {
     private static final String MODE_KEY = "construct_kind";
     private static final long DEFAULT_EYES_MASK = (1L << 33) | (1L << 34) | (1L << 37) | (1L << 38);
+    private static final RawAnimation IDLE_ANIM = RawAnimation.begin().thenLoop("animation.power_ring.idle");
 
+    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
     private final LanternCorps corps;
 
     public CorpsRingItem(LanternCorps corps, Settings settings) {
@@ -37,9 +49,7 @@ public class CorpsRingItem extends TrinketItem {
         this.corps = corps;
     }
 
-    public LanternCorps getCorps() {
-        return corps;
-    }
+    public LanternCorps getCorps() { return corps; }
 
     public static ConstructEntity.Kind getKind(ItemStack stack) {
         int idx = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT).copyNbt().getInt(MODE_KEY);
@@ -63,10 +73,10 @@ public class CorpsRingItem extends TrinketItem {
     @Override
     public void onUnequip(ItemStack stack, SlotReference slot, LivingEntity entity) {
         if (!entity.getWorld().isClient && entity instanceof PlayerEntity player) {
-            boolean stillHasRing = TrinketsApi.getTrinketComponent(player)
+            boolean stillHas = TrinketsApi.getTrinketComponent(player)
                     .map(c -> c.isEquipped(s -> s.getItem() instanceof CorpsRingItem))
                     .orElse(false);
-            if (!stillHasRing) {
+            if (!stillHas) {
                 PlayerLanternComponent data = ModComponents.LANTERN.get(player);
                 data.setSuitActive(false);
                 data.setAuraActive(false);
@@ -88,13 +98,11 @@ public class CorpsRingItem extends TrinketItem {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack stack = player.getStackInHand(hand);
         if (world.isClient) return TypedActionResult.success(stack, true);
-
         PlayerLanternComponent data = ModComponents.LANTERN.get(player);
 
         if (hand == Hand.OFF_HAND) {
-            if (data.getActiveCorps() != corps) {
-                activateNewRing(player, data);
-            } else {
+            if (data.getActiveCorps() != corps) activateNewRing(player, data);
+            else {
                 boolean next = !data.isSuitActive();
                 data.setSuitActive(next);
                 data.setAuraActive(next);
@@ -127,8 +135,7 @@ public class CorpsRingItem extends TrinketItem {
 
         ConstructEntity construct = ModEntities.CONSTRUCT.create(world);
         if (construct != null) {
-            float mult = SpectrumSynergy.getPowerMultiplier(player);
-            construct.configure(player, kind, corps, data.getDisplayArgb(), mult);
+            construct.configure(player, kind, corps, data.getDisplayArgb(), SpectrumSynergy.getPowerMultiplier(player));
             world.spawnEntity(construct);
             world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ILLUSIONER_CAST_SPELL, SoundCategory.PLAYERS, 0.8f, 1.25f);
             player.getItemCooldownManager().set(this, 8);
@@ -155,9 +162,7 @@ public class CorpsRingItem extends TrinketItem {
 
     @Override
     public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (!world.isClient && entity instanceof PlayerEntity player) {
-            handleRingTick(player, world);
-        }
+        if (!world.isClient && entity instanceof PlayerEntity player) handleRingTick(player, world);
     }
 
     private void handleRingTick(PlayerEntity player, World world) {
@@ -173,9 +178,7 @@ public class CorpsRingItem extends TrinketItem {
     }
 
     @Override
-    public boolean hasGlint(ItemStack stack) {
-        return true;
-    }
+    public boolean hasGlint(ItemStack stack) { return true; }
 
     @Override
     public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
@@ -183,4 +186,24 @@ public class CorpsRingItem extends TrinketItem {
         tooltip.add(Text.literal("Надень в слот кольца (Trinkets) или используй в руке").formatted(Formatting.GOLD));
         tooltip.add(Text.literal("Режим: " + getKind(stack).name() + " (Shift+ПКМ)").formatted(Formatting.AQUA));
     }
+
+    @Override
+    public void createGeoRenderer(Consumer<GeoRenderProvider> consumer) {
+        consumer.accept(new GeoRenderProvider() {
+            private PowerRingGeoRenderer renderer;
+            @Override
+            public BuiltinModelItemRenderer getGeoItemRenderer() {
+                if (this.renderer == null) this.renderer = new PowerRingGeoRenderer();
+                return this.renderer;
+            }
+        });
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "idle", 0, state -> state.setAndContinue(IDLE_ANIM)));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() { return cache; }
 }
