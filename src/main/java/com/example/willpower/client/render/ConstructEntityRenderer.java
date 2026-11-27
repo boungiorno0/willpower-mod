@@ -25,7 +25,7 @@ public class ConstructEntityRenderer extends EntityRenderer<ConstructEntity> {
         float scale = entity.getScale();
         int rgb = entity.getColorArgb() & 0x00FFFFFF;
         int coreColor = 0xCC000000 | rgb;
-        int auraColor = 0x44000000 | rgb;
+        int auraColor = 0x55000000 | rgb;
         float spin = (entity.age + tickDelta) * 14f;
 
         VertexConsumer vc = consumers.getBuffer(HardLightRenderLayers.getHardLightGlow(WHITE_TEX));
@@ -69,10 +69,8 @@ public class ConstructEntityRenderer extends EntityRenderer<ConstructEntity> {
         m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-e.getYaw()));
         m.multiply(RotationAxis.POSITIVE_X.rotationDegrees(e.getPitch()));
         m.scale(s, s, s);
-        // Предплечье и ладонь
         m.push(); m.translate(0, 0, -0.65); drawScaled(m, vc, 0.85f, 0.85f, 1.25f, aura); m.pop();
         drawScaled(m, vc, 1.35f, 1.15f, 1.1f, core);
-        // 4 пальца + большой палец
         for (int i = 0; i < 4; i++) {
             m.push();
             m.translate(-0.42f + i * 0.28f, -0.05f, 0.55f);
@@ -84,31 +82,39 @@ public class ConstructEntityRenderer extends EntityRenderer<ConstructEntity> {
 
     private void renderCage(MatrixStack m, VertexConsumer vc, float spin, int core, int aura) {
         m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(spin * 0.15f));
-        for (int i = 0; i < 8; i++) {
-            double ang = (Math.PI * 2.0 * i) / 8.0;
+        for (int i = 0; i < 10; i++) {
+            double ang = (Math.PI * 2.0 * i) / 10.0;
             m.push();
-            m.translate(Math.cos(ang) * 1.4, 1.25, Math.sin(ang) * 1.4);
-            drawScaled(m, vc, 0.16f, 2.7f, 0.16f, core);
+            m.translate(Math.cos(ang) * 1.45, 1.25, Math.sin(ang) * 1.45);
+            m.multiply(RotationAxis.POSITIVE_Y.rotation((float) -ang));
+            drawScaled(m, vc, 0.12f, 2.7f, 0.12f, core);
             m.pop();
         }
-        m.push(); m.translate(0, 2.6, 0); drawScaled(m, vc, 3.0f, 0.14f, 3.0f, aura); m.pop();
-        m.push(); m.translate(0, 0.05, 0); drawScaled(m, vc, 3.0f, 0.14f, 3.0f, aura); m.pop();
+        drawRing(m, vc, 0.05f, 1.45f, 0.12f, aura);
+        drawRing(m, vc, 2.60f, 1.45f, 0.12f, aura);
     }
 
     private void renderDome(MatrixStack m, VertexConsumer vc, float spin, int core, int aura) {
-        int soft = (0x22 << 24) | (aura & 0x00FFFFFF);
-        drawScaled(m, vc, 4.6f, 4.6f, 4.6f, soft);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             m.push();
-            m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(spin * 0.5f + i * 60f));
-            m.multiply(RotationAxis.POSITIVE_X.rotationDegrees(35f * (i - 1)));
-            for (int k = 0; k < 12; k++) {
-                double a = (Math.PI * 2.0 * k) / 12.0;
-                m.push();
-                m.translate(Math.cos(a) * 2.45, 0, Math.sin(a) * 2.45);
-                drawScaled(m, vc, 0.14f, 0.14f, 0.42f, core);
-                m.pop();
-            }
+            m.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(spin * 0.45f + i * 45f));
+            m.multiply(RotationAxis.POSITIVE_X.rotationDegrees(i == 0 ? 0f : 55f));
+            drawRing(m, vc, 0.0f, 2.55f, 0.10f, i % 2 == 0 ? core : aura);
+            m.pop();
+        }
+        drawRing(m, vc, -0.7f, 2.35f, 0.08f, aura);
+        drawRing(m, vc,  0.7f, 2.35f, 0.08f, aura);
+    }
+
+    private void drawRing(MatrixStack m, VertexConsumer vc, float y, float radius, float thickness, int color) {
+        int segs = 16;
+        float segLen = (float) (2.0 * Math.PI * radius / segs) * 1.05f;
+        for (int k = 0; k < segs; k++) {
+            double a = (Math.PI * 2.0 * k) / segs;
+            m.push();
+            m.translate(Math.cos(a) * radius, y, Math.sin(a) * radius);
+            m.multiply(RotationAxis.POSITIVE_Y.rotation((float) -a));
+            drawScaled(m, vc, thickness, thickness, segLen, color);
             m.pop();
         }
     }
