@@ -68,4 +68,54 @@ public final class PowerLanternGeoRenderers {
         return (a << 24) | (Math.clamp(b, 0, 255) << 16) | (Math.clamp(g, 0, 255) << 8) | Math.clamp(r, 0, 255);
     }
 
-    public static cl
+    public static class BlockGeoRenderer extends GeoBlockRenderer<PowerLanternBlockEntity> {
+        public BlockGeoRenderer() {
+            super(new DefaultedBlockGeoModel<>(MODEL_ID));
+        }
+
+        @Override
+        public Identifier getTextureLocation(PowerLanternBlockEntity animatable) {
+            return getTexture(animatable.getCorps());
+        }
+
+        @Override
+        public void defaultRender(MatrixStack poseStack, PowerLanternBlockEntity animatable,
+                                  VertexConsumerProvider bufferSource, RenderLayer renderType,
+                                  VertexConsumer buffer, float yaw, float partialTick, int packedLight) {
+            poseStack.push();
+            poseStack.translate(-0.5, 0.0, -0.5);
+            super.defaultRender(poseStack, animatable, bufferSource, renderType, buffer, yaw, partialTick, packedLight);
+            poseStack.pop();
+        }
+    }
+
+    public static class ItemGeoRenderer extends GeoItemRenderer<PowerLanternItem> {
+        public ItemGeoRenderer() {
+            super(new DefaultedBlockGeoModel<>(MODEL_ID));
+        }
+
+        @Override
+        public Identifier getTextureLocation(PowerLanternItem animatable) {
+            return getTexture(animatable.getCorps());
+        }
+
+        @Override
+        public void render(ItemStack stack, ModelTransformationMode mode, MatrixStack poseStack,
+                           VertexConsumerProvider bufferSource, int packedLight, int packedOverlay) {
+            poseStack.push();
+            poseStack.translate(-0.5, 0.0, -0.5);
+            if (mode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND || mode == ModelTransformationMode.FIRST_PERSON_LEFT_HAND
+                    || mode == ModelTransformationMode.THIRD_PERSON_RIGHT_HAND || mode == ModelTransformationMode.THIRD_PERSON_LEFT_HAND) {
+                var player = MinecraftClient.getInstance().player;
+                float swing = player != null
+                        ? (float) Math.sin(player.limbAnimator.getPos() * 0.66f) * player.limbAnimator.getSpeed() * 18.0f
+                        : 0.0f;
+                poseStack.translate(0.5, 0.85, 0.5);
+                poseStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(swing));
+                poseStack.translate(-0.5, -1.65, -0.5);
+            }
+            super.render(stack, mode, poseStack, bufferSource, packedLight, packedOverlay);
+            poseStack.pop();
+        }
+    }
+}
